@@ -1,0 +1,20 @@
+data <- read_csv("Downloads/Real_Estate_Sales_2001-2023_GL.csv")
+
+data <- data %>% clean_names()
+
+data <- data %>% 
+  mutate(date_recorded = mdy(date_recorded))
+
+names(data)
+
+data %>% filter(!is.na(non_use_code))
+
+data_ex_nuc <- data %>% filter(is.na(non_use_code)) %>% select(!`Date Recorded`)
+
+data_ex_nuc %>% 
+  pivot_longer(cols = c(assessed_value,sale_amount),
+               names_to = "price_type",
+               values_to = "price") %>% 
+  ggplot(aes(x = date_recorded,
+             y = price,
+             color = price_type)) + geom_line() + geom_point()
