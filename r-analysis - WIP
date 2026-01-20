@@ -1,0 +1,255 @@
+---
+title: "Real Estate Sales 2021-2023"
+format: html
+editor: visual
+---
+
+Real Estate Sales 2001-2023: Analysis
+
+(State of Connecticut)
+
+Price Recorded Over Time
+
+In order to take a closer look at the trends in value of time of property sales, I first filtered out sales with commentary that included commentary that highlighted towards other responses for sale that may impact the price and result in deviation from its respective market value. These included sales that were passed down in wills, as gifts, auctioned, or foreclosed. This is to maintain data structure and integrity and will be analyzed further in another section.
+
+Variables:
+
+serial number
+
+list year
+
+date recorded
+
+town
+
+address
+
+assessed_value
+
+sale_amount
+
+sales_ratio: assessed value/ sale amount
+
+>1 = over assessed, < 1 = under-assessed (be wary of values that are critically low as it can point towards outdated assessments).
+
+property type: residential, commercial, vacant land, public utility, apartments, industrial, condo, two family, single family, three family, four family.
+
+residential type: repetitive of property types: single family, two family, three family, four family, condo
+
+non-use code
+
+assessor remarks: notes & codes regarding property/ sale. Many internal assessor codes
+
+opm remarks
+
+{r}
+#| echo: false
+
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(stringr)
+library(janitor)
+library(lubridate)
+
+{r}
+#| echo: false
+
+#importing and cleaning the data
+
+setwd("~/Downloads")
+data <- read_csv("~/Downloads/Real_Estate_Sales_2001-2023_GL.csv")
+
+data <- data %>% 
+  clean_names() %>% 
+  mutate(date_recorded = mdy(date_recorded),
+         record_year = year(date_recorded))
+
+data <- data %>% 
+  mutate(record_year = ifelse(nchar(record_year) == 2, 
+                              as.integer(paste0("20", record_year)), 
+                              as.integer(record_year)))
+
+data <- data %>% 
+  mutate(property_type = case_when(
+           property_type %in% c("Single Family", "Two Family", "Three Family", "Four Family", "Condo", "Apartments") ~ "Residential",
+           TRUE ~ property_type
+         ))
+
+data %>% 
+  group_by(record_year) %>% 
+  mutate(n = n()) %>% 
+  ggplot(aes(x = record_year,
+             y = n,
+             fill = property_type)) + geom_col() + theme_bw() + 
+scale_y_continuous(labels = scales::label_number(big.mark = ","))  +
+  labs(
+    title = "Property Data Breakdown",
+    y = "Count",
+    x = "Year",
+    fill = "Property Type"
+  )
+
+It's evident that before the year 2007, basically all of the real estate properties documented was recorded under the property type "NA". To maintain the the integrity of the data and draw meaningful analysis, we will only be analyzing the data that is not marked as NA.
+
+{r}
+
+data <- data %>% filter(!is.na(property_type))
+  
+ex_nuc <- data %>% filter(is.na(non_use_code)) 
+
+#data ex nuc = those excluding a non_use_code. aka more legitimate data
+
+#graph 1
+ex_nuc %>%  ggplot(aes(x = fct_infreq(property_type))) + geom_bar(fill = "darkblue") + theme_bw() + theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)) + 
+scale_y_continuous(labels = scales::label_number(big.mark = ",")) +
+  geom_text(
+    stat = "count", #count works here even if the number is calculated through geom and is not a stand alone column! 
+    aes(label = scales::comma(after_stat(count))),
+    vjust = -0.3,
+    size = 3
+  ) + labs(
+    title = "Distribution of Properties by Property Type",
+    subtitle = "Excluding sales with non-use codes due to special circumstances - NA excluded",
+    y = "Count",
+    x = "Property Type"
+  )
+
+#graph 2
+ex_nuc %>% filter(!is.na(residential_type)) %>% ggplot(aes(x = fct_infreq(residential_type))) + geom_bar(fill = "darkblue") + theme_bw() + theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)) + 
+scale_y_continuous(labels = scales::label_number()) +
+  geom_text(
+    stat = "count", #count works here even if the number is calculated through geom and is not a stand alone column! 
+    aes(label = scales::comma(after_stat(count))),
+    vjust = -0.3,
+    size = 3
+  ) + labs(
+    title = "Distribution of Properties by Residential Type",
+    subtitle = "Excluding sales with non-use codes due to special circumstances - NA excluded",
+    y = "Count",
+    x = "Residential Type"
+  )
+
+
+{r}
+#average of sale ratio over the years
+
+#clean the data. Confirm date recorded is the date of sale and the year can differ from the listing year. 
+
+sr_kable <- ex_nuc %>% group_by(residential_type, record_year) %>% summarise(mean_ratio = mean(sales_ratio)) %>% arrange(record_year) %>% filter(!is.na(record_year)) %>% 
+  pivot_wider(
+  names_from = residential_type,
+  values_from = mean_ratio
+) %>%
+  select(record_year, Condo, `Single Family`, `Two Family`) %>% 
+  rename("Record Year" = record_year)  %>%
+  kable(
+    caption = "Mean Sales Ratio by Residential Type and Year",
+    format = "html",  # or "latex" if you're using LaTeX
+    digits = 3  # number of decimal places
+  ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+
+Sales Ratio Analysis
+
+Property Types - We can see that majority of the data comes from residential properties with other types only being recorded in this database recently (2020).
+
+{r}
+ex_nuc %>% 
+  group_by(property_type, record_year) %>% 
+  summarise(mean_ratio = mean(sales_ratio)) %>% 
+  ggplot(aes(x = record_year,y = mean_ratio,color = property_type)) + geom_line() + theme_bw() + 
+  labs(title = "Sales Ratio Over Time by Property Type",
+       y = "Average Sales Ratio",
+       x = "Recorded Year of Sale",
+       color = "Type")
+
+A further analysis into residential data, we can see that most of the residential types move together, with a significant dip in 2008 and a spike around 2011.
+
+{r}
+ex_nuc %>% 
+  group_by(residential_type, record_year) %>% 
+  filter(!is.na(residential_type)) %>% 
+  summarise(mean_ratio = mean(sales_ratio)) %>% 
+  ggplot(aes(x = record_year,y = mean_ratio,color = residential_type)) + geom_line() + theme_bw() + 
+  labs(title = "Sales Ratio Over Time by Residential Type",
+       y = "Average Sales Ratio",
+       x = "Recorded Year of Sale",
+       color = "Type")
+
+
+Importance of a Sales Ratio | Residential Type - Crash & Recovery
+
+A sales ratio is calculated by dividing the assessed value over the sale amount with ratio values over one signifying an over assessment, while values under one signify an under assessment.
+
+Increases:
+
+either increase/ unmatched growth of assessed value or decline of sale price
+
+Decreases:
+
+either decline/ unmatched depreciation of assessed value or increase of sale price
+
+Let's break this down to see which had the larger impact on the sales ratio:
+
+{r}
+res_values_kable <- ex_nuc %>% 
+  select(assessed_value,sale_amount,sales_ratio,residential_type, record_year) %>% 
+  filter(!is.na(residential_type)) %>% 
+  arrange(record_year) %>% 
+  select(record_year, residential_type,assessed_value,sale_amount,sales_ratio) %>% 
+rename("Record Year" = record_year,
+       "Residential Type" = residential_type,
+       "Assessed Value" = assessed_value,
+       "Sale Amount" = sale_amount,
+       "Sales Ratio" = sales_ratio) %>%
+  kable(
+    caption = "Mean Sales Ratio by Residential Type and Year",
+    format = "html",  # or "latex" if you're using LaTeX
+    digits = 3  # number of decimal places
+  ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+
+{r}
+
+ex_nuc %>% 
+  select(assessed_value,sale_amount,residential_type, record_year) %>% filter(!is.na(residential_type)) %>% 
+  pivot_longer(
+    cols = c(assessed_value,sale_amount),
+    names_to = "value_type",
+    values_to = "amount"
+  ) %>% ggplot(aes(x = record_year,
+                   y = amount,
+                   fill = value_type)) + geom_col(position = "dodge") + 
+  theme_bw() + 
+  scale_fill_manual(values = c("lightblue", "darkblue")) + 
+  labs(
+    fill = "Value Type",
+    title = "Sales Ratio Breakdown",
+    subtitle = "Assessed Value vs. Sale Amount Over Time",
+    y = "Amount ($)",
+    x = "Year"
+  ) +
+  annotate("rect", 
+           xmin = 2008, xmax = 2011, 
+           ymin = -Inf, ymax = Inf, 
+           fill = "grey", alpha = 0.3) + scale_y_continuous(labels = scales::label_number(big.mark = ",")) 
+
+
+Data
+
+{r}
+data_jitter <- ex_nuc %>% 
+  filter(sales_ratio < 20) %>% 
+  ggplot(aes(x = record_year,y = sales_ratio)) + geom_point(alpha = 0.3, color = "steelblue", position = "jitter") + theme_bw() + 
+  labs(title = "Sales Ratio Over Time Distribution of All Data",
+       subtitle = "Excludes 2 Outlying Data Points",
+       y = "Sales Ratio",
+       x = "Recorded Year of Sale",
+       color = "Type") 
+
+
