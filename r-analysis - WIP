@@ -10,7 +10,9 @@ Objective: Analyze long-term trends in Connecticut real estate assessments relat
 
 Price Recorded Over Time - Background
 
-In order to take a closer look at the trends in value of time of property sales, I first filtered out sales with commentary that included commentary that highlighted towards other responses for sale that may impact the price and result in deviation from its respective market value. These included sales that were passed down in wills, as gifts, auctioned, or foreclosed. This is to maintain data structure and integrity and will be analyzed further in another section.
+In order to take a closer look at the trends in value of time of property sales, I filtered out sales with notes indicating special circumstances, such as inheritances, gifts, auctions, or foreclosures, which could distort market value.
+
+ that included commentary that highlighted towards other responses for sale that may impact the price and result in deviation from its respective market value. These included sales that were passed down in wills, as gifts, auctioned, or foreclosed. This is to maintain data structure and integrity and will be analyzed further in another section.
 
 Variables:
 
@@ -90,7 +92,7 @@ scale_y_continuous(labels = scales::label_number(big.mark = ","))  +
     fill = "Property Type"
   )
 
-It's evident that before the year 2007, basically all of the real estate properties documented was recorded under the property type "NA". To maintain the the integrity of the data and draw meaningful analysis, we will only be analyzing the data that is not marked as NA.
+It's evident that before the year 2007, basically all of the real estate properties documented was recorded under the property type "NA". To maintain the integrity of the data and draw meaningful analysis, we will only be analyzing the data that is not marked as NA.
 
 Property Type vs. Residential Type
 
@@ -259,3 +261,8 @@ data_jitter <- ex_nuc %>%
 
 Business Implications:
 
+Real estate pricing is inherently challenging due to its sensitivity to macroeconomic conditions. This volatility was highlighted by Zillow’s Zestimate collapse, where their AI algorithm failed to accurately predict home values.
+
+Unpredictable events, such as the Covid-19 pandemic or emerging international conflicts, further complicate price forecasting. While it is reasonable to assess a property’s value based on future cash flows, consumer preferences (e.g., amenities, size, and access to transportation), attempting to predict overall market prices is far less reliable and often unproductive.
+
+This suggests that investors and analysts may be better served by evaluating fundamentals and property specific cash flows than attempting to forecast aggregate market prices. 
