@@ -1,14 +1,14 @@
 ---
-title: "Real Estate Sales 2021-2023"
+title: "Real Estate Sales 2001-2023"
 format: html
 editor: visual
 ---
 
 Real Estate Sales 2001-2023: Analysis
 
-(State of Connecticut)
+Objective: Analyze long-term trends in Connecticut real estate assessments relative to sale prices to evaluate changes in assessment behavior and their impact across property types and economic cycles.
 
-Price Recorded Over Time
+Price Recorded Over Time - Background
 
 In order to take a closer look at the trends in value of time of property sales, I first filtered out sales with commentary that included commentary that highlighted towards other responses for sale that may impact the price and result in deviation from its respective market value. These included sales that were passed down in wills, as gifts, auctioned, or foreclosed. This is to maintain data structure and integrity and will be analyzed further in another section.
 
@@ -92,6 +92,8 @@ scale_y_continuous(labels = scales::label_number(big.mark = ","))  +
 
 It's evident that before the year 2007, basically all of the real estate properties documented was recorded under the property type "NA". To maintain the the integrity of the data and draw meaningful analysis, we will only be analyzing the data that is not marked as NA.
 
+Property Type vs. Residential Type
+
 {r}
 
 data <- data %>% filter(!is.na(property_type))
@@ -133,6 +135,8 @@ scale_y_continuous(labels = scales::label_number()) +
   )
 
 
+Sales Ratio Analysis
+
 {r}
 #average of sale ratio over the years
 
@@ -167,7 +171,7 @@ ex_nuc %>%
        x = "Recorded Year of Sale",
        color = "Type")
 
-A further analysis into residential data, we can see that most of the residential types move together, with a significant dip in 2008 and a spike around 2011.
+A further analysis into residential data, we can see that most of the residential types move together, with a significant dip in 2008 and a spike around 2011. Focusing strictly on residential properties, we can see that, for the most part, all types move in a similar trend with a sales ratio low of around 2007 and a high close to 2011. This suggests that macroeconomic conditions may play a larger role in assessed price to sale amount discrepancies than property-specific characteristics, especially during periods of market stress. Compared to the others, it seems that three-family properties consistently have a lower average sales ratio. Reasons for this may include the fact that investors focus on the perspective cash flow, taking into account rent growth expectations, vacancy assumptions, and potential renovations while assessments focus primarily on historical data. This discrepancy creates a gap between the assessed value and actual sale amount - resulting in a lower sales ratio.
 
 {r}
 ex_nuc %>% 
@@ -240,7 +244,7 @@ ex_nuc %>%
            fill = "grey", alpha = 0.3) + scale_y_continuous(labels = scales::label_number(big.mark = ",")) 
 
 
-Data
+When broken down, it's evident that the increase in sales ratio results from a drastic increase in assessed value, while in preceding years the sale amount had been consistently higher in comparison. This likely resulted from the implementation of a new underwriting formula following the 2008 financial crisis, which considered additional factors into a property's assessed value, including income potential, updated market comparables, and revised weighing of valuation characteristics rather than relying primarily on historical sales data.
 
 {r}
 data_jitter <- ex_nuc %>% 
@@ -252,4 +256,6 @@ data_jitter <- ex_nuc %>%
        x = "Recorded Year of Sale",
        color = "Type") 
 
+
+Business Implications:
 
